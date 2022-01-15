@@ -4,6 +4,31 @@
   
     
     <entry>
+      <title>blog-picture</title>
+      <link href="//pages/c003/"/>
+      <url>//pages/c003/</url>
+      
+        <content type="html"><![CDATA[<blockquote><p>由于在使用hexo搭建博客过程中遇到了图片不显示的问题，本篇就详细解释一下。（windows）  </p></blockquote><p>在项目根目录下打开cmd，输入<code>hexo new xxx</code>之后会在根目录下创建一个xxx.md文件和xxx的文件夹，我们可以把<br>图片放到xxx文件夹内，然后在xxx.md文件内引入，引入的方式如下：  </p><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token operator">!</span><span class="token punctuation">[</span>test<span class="token punctuation">]</span><span class="token punctuation">(</span>test.png<span class="token punctuation">)</span><span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><p><em>是不需要带上相对路径的</em><br><strong>但是它有一些前提条件！！！</strong></p><ol><li>安装插件，在项目根目录下打开cmd，然后输入下面命令<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">npm</span> <span class="token function">install</span> https://github.com/CodeFalling/hexo-asset-image --save<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre></li><li>修改主页配置文件，把_config.yml里的post_asset_folder:这个选项设置为true</li><li>使用<code>hexo new xxx</code>来生成博客和它的文件夹，图片就放到相应的文件夹即可<blockquote><p>测试一下</p></blockquote></li></ol><p><img src="/pages/c003/a.png" alt="test"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 博客篇 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> blog </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Redis的分布式锁简单实现</title>
       <link href="//pages/c002/"/>
       <url>//pages/c002/</url>
