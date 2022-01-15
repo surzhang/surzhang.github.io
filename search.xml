@@ -4,31 +4,6 @@
   
     
     <entry>
-      <title>搭建hexo+github博客</title>
-      <link href="//pages/c001/"/>
-      <url>//pages/c001/</url>
-      
-        <content type="html"><![CDATA[<ul><li>首先使用如下命令安装hexo-cli，看名字就知道Hexo的CLI工具；</li></ul><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">npm</span> <span class="token function">install</span> -g hexo-cli<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><ul><li>安装成功后初始化一个博客目录，并进入该目录，然后安装依赖；</li></ul><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token comment"># 初始化博客目录</span>hexo init website-hexo<span class="token comment"># 进入博客目录</span><span class="token builtin class-name">cd</span> website-hexo<span class="token comment"># 安装博客相关依赖</span><span class="token function">npm</span> <span class="token function">install</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><ul><li>这样一个基本的博客网站就搭建完毕了，是不是秒建博客网站，然后使用如下命令启动博客网站:</li></ul><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">hexo server<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><ul><li>启动成功后我们可以访问下主页，用过Hexo的朋友应该知道，Hexo要搭配主题来使用，否则真的很丑，访问地址：<a href="http://localhost:4000/">http://localhost:4000/</a></li></ul>]]></content>
-      
-      
-      <categories>
-          
-          <category> 搭建bolg </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> github </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>Redis的分布式锁简单实现</title>
       <link href="//pages/c002/"/>
       <url>//pages/c002/</url>
@@ -46,6 +21,31 @@
         <tags>
             
             <tag> redis </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>搭建hexo+github博客</title>
+      <link href="//pages/c001/"/>
+      <url>//pages/c001/</url>
+      
+        <content type="html"><![CDATA[<ul><li>首先使用如下命令安装hexo-cli，看名字就知道Hexo的CLI工具；</li></ul><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">npm</span> <span class="token function">install</span> -g hexo-cli<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><ul><li>安装成功后初始化一个博客目录，并进入该目录，然后安装依赖；</li></ul><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token comment"># 初始化博客目录</span>hexo init website-hexo<span class="token comment"># 进入博客目录</span><span class="token builtin class-name">cd</span> website-hexo<span class="token comment"># 安装博客相关依赖</span><span class="token function">npm</span> <span class="token function">install</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre><ul><li>这样一个基本的博客网站就搭建完毕了，是不是秒建博客网站，然后使用如下命令启动博客网站:</li></ul><pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">hexo server<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><ul><li>启动成功后我们可以访问下主页，用过Hexo的朋友应该知道，Hexo要搭配主题来使用，否则真的很丑，访问地址：<a href="http://localhost:4000/">http://localhost:4000/</a></li></ul>]]></content>
+      
+      
+      <categories>
+          
+          <category> 搭建bolg </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> github </tag>
             
         </tags>
       
