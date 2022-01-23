@@ -4,8 +4,8 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="Redis的分布式锁简单实现, tigerzhang">
-    <meta name="description" content="随着业务发展的需要，原单体单机部署的系统被演化成分布式集群系统后，由于分布式系统多线程、多进程并且分布在不同机器上，这将使原单机部署情况下的并发控制锁策略失效，单纯的Java API并不能提供分布式锁的能力。为了解决这个问题就需要一种跨JV">
+    <meta name="keywords" content="cas, tigerzhang">
+    <meta name="description" content="1.什么是CAS（比较并交换-乐观锁机制-锁自旋）？概念及特性CAS（Compare And Swap/Set）比较并交换，CAS 算法的过程是这样：它包含 3 个参数CAS(V,E,N)。V 表示要更新的变量(内存值)，E 表示预期值(旧">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -17,7 +17,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>Redis的分布式锁简单实现 | tigerzhang</title>
+    <title>cas | tigerzhang</title>
     <link rel="icon" type="image/png" href="/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
@@ -356,12 +356,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/9.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/5.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">Redis的分布式锁简单实现</h1>
+                    <h1 class="description center-align post-title">cas</h1>
                 </div>
             </div>
         </div>
@@ -477,8 +477,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/redis/">
-                                <span class="chip bg-color">redis</span>
+                            <a href="/tags/interview/">
+                                <span class="chip bg-color">interview</span>
                             </a>
                         
                     </div>
@@ -489,8 +489,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/%E5%88%86%E5%B8%83%E5%BC%8F%E7%AF%87/" class="post-category">
-                                分布式篇
+                            <a href="/categories/%E9%9D%A2%E8%AF%95/" class="post-category">
+                                面试
                             </a>
                         
                     </div>
@@ -502,7 +502,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2022-01-15
+                    2022-01-23
                 </div>
                 
 
@@ -526,148 +526,44 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>随着业务发展的需要，原单体单机部署的系统被演化成分布式集群系统后，由于分布式系统多线程、多进程并且分布在不同机器上，<br>这将使原单机部署情况下的并发控制锁策略失效，单纯的Java API并不能提供分布式锁的能力。为了解决这个问题就需要一种跨JVM的互斥机制来控制共享资源的访问，<br>这就是分布式锁要解决的问题！<br>分布式锁主流实现方案：  </p>
+                <h2 id="1-什么是CAS（比较并交换-乐观锁机制-锁自旋）？"><a href="#1-什么是CAS（比较并交换-乐观锁机制-锁自旋）？" class="headerlink" title="1.什么是CAS（比较并交换-乐观锁机制-锁自旋）？"></a>1.什么是CAS（比较并交换-乐观锁机制-锁自旋）？</h2><h3 id="概念及特性"><a href="#概念及特性" class="headerlink" title="概念及特性"></a>概念及特性</h3><p>CAS（Compare And Swap/Set）比较并交换，CAS 算法的过程是这样：它包含 3 个参数<br>CAS(V,E,N)。V 表示要更新的变量(内存值)，E 表示预期值(旧的)，N 表示新值。当且仅当 V 值等<br>于 E 值时，才会将 V 的值设为 N，如果 V 值和 E 值不同，则说明已经有其他线程做了更新，则当<br>前线程什么都不做。最后，CAS 返回当前 V 的真实值。<br>CAS 操作是抱着乐观的态度进行的(乐观锁)，它总是认为自己可以成功完成操作。当多个线程同时<br>使用 CAS 操作一个变量时，只有一个会胜出，并成功更新，其余均会失败。失败的线程不会被挂<br>起，仅是被告知失败，并且允许再次尝试，当然也允许失败的线程放弃操作。基于这样的原理，<br>CAS 操作即使没有锁，也可以发现其他线程对当前线程的干扰，并进行恰当的处理。  </p>
+<h3 id="原子包-java-util-concurrent-atomic（锁自旋）"><a href="#原子包-java-util-concurrent-atomic（锁自旋）" class="headerlink" title="原子包 java.util.concurrent.atomic（锁自旋）"></a>原子包 java.util.concurrent.atomic（锁自旋）</h3><p>JDK1.5 的原子包：java.util.concurrent.atomic 这个包里面提供了一组原子类。其基本的特性就<br>是在多线程环境下，当有多个线程同时执行这些类的实例包含的方法时，具有排他性，即当某个<br>线程进入方法，执行其中的指令时，不会被其他线程打断，而别的线程就像自旋锁一样，一直等<br>到该方法执行完成，才由 JVM 从等待队列中选择一个另一个线程进入，这只是一种逻辑上的理解。<br>相对于对于 synchronized 这种阻塞算法，CAS 是非阻塞算法的一种常见实现。由于一般 CPU 切<br>换时间比 CPU 指令集操作更加长， 所以 J.U.C 在性能上有了很大的提升。如下代码：  </p>
+<pre><code class="java">public class AtomicInteger extends Number implements java.io.Serializable &#123;
+    private volatile int value;
+    public final int get() &#123;
+        return value;
+    &#125;
+    public final int getAndIncrement() &#123;
+        for (;;) &#123; //CAS 自旋，一直尝试，直达成功
+            int current = get();
+            int next = current + 1;
+            if (compareAndSet(current, next))
+                return current;
+        &#125;
+    &#125;
+    public final boolean compareAndSet(int expect, int update) &#123;
+        return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
+    &#125;   
+&#125;
+</code></pre>
+<p><code>getAndIncrement</code> 采用了 CAS 操作，每次从内存中读取数据然后将此数据和+1 后的结果进行<br>CAS 操作，如果成功就返回结果，否则重试直到成功为止。而 compareAndSet 利用 JNI 来完成<br>CPU 指令的操作。</p>
+<h3 id="ABA问题？"><a href="#ABA问题？" class="headerlink" title="ABA问题？"></a>ABA问题？</h3><p>CAS 会导致“ABA 问题”。CAS 算法实现一个重要前提需要取出内存中某时刻的数据，而在下时<br>刻比较并替换，那么在这个时间差类会导致数据的变化。<br>比如说一个线程 one 从内存位置 V 中取出 A，这时候另一个线程 two 也从内存中取出 A，并且<br>two 进行了一些操作变成了 B，然后 two 又将 V 位置的数据变成 A，这时候线程 one 进行 CAS 操<br>作发现内存中仍然是 A，然后 one 操作成功。尽管线程 one 的 CAS 操作成功，但是不代表这个过<br>程就是没有问题的。<br>部分乐观锁的实现是通过版本号（version）的方式来解决 ABA 问题，乐观锁每次在执行数据的修<br>改操作时，都会带上一个版本号，一旦版本号和数据的版本号一致就可以执行修改操作并对版本<br>号执行+1 操作，否则就执行失败。因为每次操作的版本号都会随之增加，所以不会出现 ABA 问<br>题，因为版本号只会增加不会减少。  </p>
+<h2 id="2-什么是-AQS（抽象的队列同步器）"><a href="#2-什么是-AQS（抽象的队列同步器）" class="headerlink" title="2.什么是 AQS（抽象的队列同步器）"></a>2.什么是 AQS（抽象的队列同步器）</h2><p>AbstractQueuedSynchronizer 类如其名，抽象的队列式的同步器，AQS 定义了一套多线程访问<br>共享资源的同步器框架，许多同步类实现都依赖于它，如常用的ReentrantLock/Semaphore/CountDownLatch。<br><img src="/pages/c005/a.png" alt="aqs"><br>它维护了一个 volatile int state（代表共享资源）和一个 FIFO 线程等待队列（多线程争用资源被<br>阻塞时会进入此队列）。这里 volatile 是核心关键词，具体 volatile 的语义，在此不述。state 的<br>访问方式有三种:  </p>
 <ul>
-<li>基于数据库实现分布式锁</li>
-<li>基于缓存(Redis)</li>
-<li>基于Zookeeper  </li>
+<li>getState()</li>
+<li>setState()</li>
+<li>compareAndSetState() </li>
 </ul>
-<p>每一种分布式锁解决方案都有各自的优缺点：</p>
-<ul>
-<li>性能：Redis最高</li>
-<li>可靠性：zookeeper最高<blockquote>
-<p>下面讲一下基于redis实现的分布式锁</p>
-</blockquote>
-<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token builtin class-name">set</span> lock <span class="token number">200</span> nx ex <span class="token number">10</span>
-<span class="token comment"># EX second ：设置键的过期时间为 second 秒。 SET key value EX second 效果等同于 SETEX key second value 。</span>
-<span class="token comment"># PX millisecond ：设置键的过期时间为 millisecond 毫秒。 SET key value PX millisecond 效果等同于 PSETEX key millisecond value 。</span>
-<span class="token comment"># NX ：只在键不存在时，才对键进行设置操作。 SET key value NX 效果等同于 SETNX key value 。</span>
-<span class="token comment"># XX ：只在键已经存在时，才对键进行设置操作。</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<img src="/pages/c002/c002_01.png" alt="dis1">  </li>
-</ul>
+<p>AQS 定义两种资源共享方式<br><strong>Exclusive 独占资源-ReentrantLock</strong><br>Exclusive（独占，只有一个线程能执行，如 ReentrantLock）<br><strong>Share 共享资源-Semaphore/CountDownLatch</strong><br>Share（共享，多个线程可同时执行，如 Semaphore/CountDownLatch）。<br>AQS 只是一个框架，具体资源的获取/释放方式交由自定义同步器去实现，AQS 这里只定义了一个<br>接口，具体资源的获取交由自定义同步器去实现了（通过 state 的 get/set/CAS)之所以没有定义成<br>abstract ， 是 因 为 独 占 模 式 下 只 用 实 现 tryAcquire-tryRelease ， 而 共 享 模 式 下 只 用 实 现<br>tryAcquireShared-tryReleaseShared。如果都定义成 abstract，那么每个模式也要去实现另一模<br>式下的接口。不同的自定义同步器争用共享资源的方式也不同。自定义同步器在实现时只需要实<br>现共享资源 state 的获取与释放方式即可，至于具体线程等待队列的维护（如获取资源失败入队/<br>唤醒出队等），AQS 已经在顶层实现好了。自定义同步器实现时主要实现以下几种方法：  </p>
 <ol>
-<li>多个客户端同时获取锁（setnx）</li>
-<li>获取成功，执行业务逻辑{从db获取数据，放入缓存}，执行完成释放锁（del）</li>
-<li>其他客户端等待重试  <blockquote>
-<p>示例代码：</p>
-</blockquote>
-<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token annotation punctuation">@GetMapping</span><span class="token punctuation">(</span><span class="token string">"testLock"</span><span class="token punctuation">)</span>
-<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">testLock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
-    <span class="token comment">//1获取锁，setnx</span>
-    <span class="token class-name">Boolean</span> lock <span class="token operator">=</span> redisTemplate<span class="token punctuation">.</span><span class="token function">opsForValue</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">setIfAbsent</span><span class="token punctuation">(</span><span class="token string">"lock"</span><span class="token punctuation">,</span> <span class="token string">"xxx"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token comment">//2获取锁成功、查询num的值</span>
-    <span class="token keyword">if</span><span class="token punctuation">(</span>lock<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
-        <span class="token class-name">Object</span> value <span class="token operator">=</span> redisTemplate<span class="token punctuation">.</span><span class="token function">opsForValue</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"num"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token comment">//2.1判断num为空return</span>
-        <span class="token keyword">if</span><span class="token punctuation">(</span>value<span class="token operator">!=</span><span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
-            <span class="token keyword">return</span><span class="token punctuation">;</span>
-        <span class="token punctuation">&#125;</span>
-        <span class="token comment">//2.2有值就转成成int</span>
-        <span class="token keyword">int</span> num <span class="token operator">=</span> <span class="token class-name">Integer</span><span class="token punctuation">.</span><span class="token function">parseInt</span><span class="token punctuation">(</span>value<span class="token operator">+</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token comment">//2.3把redis的num加1</span>
-        redisTemplate<span class="token punctuation">.</span><span class="token function">opsForValue</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token string">"num"</span><span class="token punctuation">,</span> <span class="token operator">++</span>num<span class="token punctuation">)</span><span class="token punctuation">;</span>
-         
-        <span class="token comment">//2.4释放锁，del</span>
-        redisTemplate<span class="token punctuation">.</span><span class="token function">delete</span><span class="token punctuation">(</span><span class="token string">"lock"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token punctuation">&#125;</span><span class="token keyword">else</span><span class="token punctuation">&#123;</span>
-        <span class="token comment">//3获取锁失败、每隔0.1秒再获取</span>
-        <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
-            <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">sleep</span><span class="token punctuation">(</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-            <span class="token function">testLock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">InterruptedException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
-            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token punctuation">&#125;</span>
-    <span class="token punctuation">&#125;</span>
-<span class="token punctuation">&#125;</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-问题：setnx刚好获取到锁，业务逻辑出现异常，导致锁无法释放<br>解决：设置lock过期时间，自动释放锁。  <blockquote>
-<p>优化，设置锁的过期时间  </p>
-</blockquote>
-</li>
+<li>isHeldExclusively()：该线程是否正在独占资源。只有用到 condition 才需要去实现它。</li>
+<li>tryAcquire(int)：独占方式。尝试获取资源，成功则返回 true，失败则返回 false。</li>
+<li>tryRelease(int)：独占方式。尝试释放资源，成功则返回 true，失败则返回 false。</li>
+<li>tryAcquireShared(int)：共享方式。尝试获取资源。负数表示失败；0 表示成功，但没有剩余<br>可用资源；正数表示成功，且有剩余资源。</li>
+<li>tryReleaseShared(int)：共享方式。尝试释放资源，如果释放后允许唤醒后续等待结点返回<br>true，否则返回 false。  </li>
 </ol>
-<p>设置过期时间有两种方式：</p>
-<ol>
-<li>首先想到通过expire设置过期时间（缺乏原子性：如果在setnx和expire之间出现异常，锁也无法释放）</li>
-<li>在set时指定过期时间（推荐）<br><img src="/pages/c002/c002_02.png" alt="dis2"><br>示例代码：  <pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token annotation punctuation">@GetMapping</span><span class="token punctuation">(</span><span class="token string">"testLock"</span><span class="token punctuation">)</span>
-<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">testLock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
-    <span class="token comment">//在redis中使用setnx  设置lock,并且设置过期时间3秒</span>
-    <span class="token class-name">Boolean</span> lock <span class="token operator">=</span> redisTemplate<span class="token punctuation">.</span><span class="token function">opsForValue</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">setIfAbsent</span><span class="token punctuation">(</span><span class="token string">"lock"</span><span class="token punctuation">,</span> <span class="token string">"chenjian"</span><span class="token punctuation">,</span><span class="token number">3</span><span class="token punctuation">,</span><span class="token class-name">TimeUnit</span><span class="token punctuation">.</span>SECONDS<span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token keyword">if</span><span class="token punctuation">(</span>lock<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
-        <span class="token class-name">Object</span> value <span class="token operator">=</span> redisTemplate<span class="token punctuation">.</span><span class="token function">opsForValue</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"num"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token comment">//2.1判断num为空return</span>
-        <span class="token keyword">if</span><span class="token punctuation">(</span>value<span class="token operator">==</span><span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
-            <span class="token keyword">return</span><span class="token punctuation">;</span>
-        <span class="token punctuation">&#125;</span>
-        <span class="token comment">//2.2有值就转成成int</span>
-        <span class="token keyword">int</span> num <span class="token operator">=</span> <span class="token class-name">Integer</span><span class="token punctuation">.</span><span class="token function">parseInt</span><span class="token punctuation">(</span>value<span class="token operator">+</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token comment">//2.3把redis的num加1</span>
-        redisTemplate<span class="token punctuation">.</span><span class="token function">opsForValue</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token string">"num"</span><span class="token punctuation">,</span> <span class="token operator">++</span>num<span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token comment">//此处模拟业务异常情况</span>
-        <span class="token keyword">if</span><span class="token punctuation">(</span>num<span class="token operator">==</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
-            <span class="token keyword">int</span> a<span class="token operator">=</span><span class="token number">1</span><span class="token operator">/</span><span class="token number">0</span><span class="token punctuation">;</span>
-        <span class="token punctuation">&#125;</span>
-        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"操作成功"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token comment">//2.4 释放锁</span>
-        redisTemplate<span class="token punctuation">.</span><span class="token function">delete</span><span class="token punctuation">(</span><span class="token string">"lock"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token punctuation">&#125;</span><span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
-        <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
-            <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">sleep</span><span class="token punctuation">(</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">InterruptedException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
-            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token punctuation">&#125;</span>
-        <span class="token function">testLock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token punctuation">&#125;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-问题：可能会释放其他服务器的锁。 </li>
-</ol>
-<p> 场景：如果业务逻辑的执行时间是7s。执行流程如下</p>
-<ol>
-<li>index1业务逻辑没执行完，3秒后锁被自动释放。</li>
-<li>index2获取到锁，执行业务逻辑，3秒后锁被自动释放。</li>
-<li>index3获取到锁，执行业务逻辑 </li>
-<li>index1业务逻辑执行完成，开始调用del释放锁，这时释放的是index3的锁，导致index3的业务只执行1s就被别人释放。</li>
-</ol>
-<p> 最终等于没锁的情况。<br> <strong>解决：setnx获取锁时，设置一个指定的唯一值（例如：uuid）；释放前获取这个值，判断是否自己的锁</strong></p>
-<blockquote>
-<p>优化之UUID防误删</p>
-</blockquote>
-<p><img src="/pages/c002/c002_03.png" alt="dis3"><br>示例代码：</p>
-<pre class="line-numbers language-java" data-language="java"><code class="language-java"><span class="token annotation punctuation">@GetMapping</span><span class="token punctuation">(</span><span class="token string">"testLock"</span><span class="token punctuation">)</span>
-<span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">testLock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
-    <span class="token class-name">String</span> uuid <span class="token operator">=</span> UUID<span class="token punctuation">.</span><span class="token function">randomUUID</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toString</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token comment">//在redis中使用setnx  设置lock,并且设置过期时间3秒</span>
-    <span class="token class-name">Boolean</span> lock <span class="token operator">=</span> redisTemplate<span class="token punctuation">.</span><span class="token function">opsForValue</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">setIfAbsent</span><span class="token punctuation">(</span><span class="token string">"lock"</span><span class="token punctuation">,</span> uuid<span class="token punctuation">,</span><span class="token number">3</span><span class="token punctuation">,</span><span class="token class-name">TimeUnit</span><span class="token punctuation">.</span>SECONDS<span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token keyword">if</span><span class="token punctuation">(</span>lock<span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
-        <span class="token class-name">Object</span> value <span class="token operator">=</span> redisTemplate<span class="token punctuation">.</span><span class="token function">opsForValue</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"num"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token comment">//2.1判断num为空return</span>
-        <span class="token keyword">if</span><span class="token punctuation">(</span>value<span class="token operator">==</span><span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
-            <span class="token keyword">return</span><span class="token punctuation">;</span>
-        <span class="token punctuation">&#125;</span>
-        <span class="token comment">//2.2有值就转成成int</span>
-        <span class="token keyword">int</span> num <span class="token operator">=</span> <span class="token class-name">Integer</span><span class="token punctuation">.</span><span class="token function">parseInt</span><span class="token punctuation">(</span>value<span class="token operator">+</span><span class="token string">""</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<p><em>同步器的实现是 ABS 核心（state 资源状态计数）</em><br>同步器的实现是 ABS 核心，以 ReentrantLock 为例，state 初始化为 0，表示未锁定状态。A 线程<br>lock()时，会调用 tryAcquire()独占该锁并将 state+1。此后，其他线程再 tryAcquire()时就会失<br>败，直到 A 线程 unlock()到 state=0（即释放锁）为止，其它线程才有机会获取该锁。当然，释放<br>锁之前，A 线程自己是可以重复获取此锁的（state 会累加），这就是可重入的概念。但要注意，<br>获取多少次就要释放多么次，这样才能保证 state 是能回到零态的。<br>以 CountDownLatch 以例，任务分为 N 个子线程去执行，state 也初始化为 N（注意 N 要与<br>线程个数一致）。这 N 个子线程是并行执行的，每个子线程执行完后 countDown()一次，state<br>会 CAS 减 1。等到所有子线程都执行完后(即 state=0)，会 unpark()主调用线程，然后主调用线程<br>就会从 await()函数返回，继续后余动作。<br>ReentrantReadWriteLock 实现独占和共享两种方式<br>一般来说，自定义同步器要么是独占方法，要么是共享方式，他们也只需实现 tryAcquire-<br>tryRelease、tryAcquireShared-tryReleaseShared 中的一种即可。但 AQS 也支持自定义同步器<br>同时实现独占和共享两种方式，如 <code>ReentrantReadWriteLock</code>。</p>
 
-        <span class="token comment">//2.3把redis的num加1</span>
-        redisTemplate<span class="token punctuation">.</span><span class="token function">opsForValue</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">set</span><span class="token punctuation">(</span><span class="token string">"num"</span><span class="token punctuation">,</span> <span class="token operator">++</span>num<span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token comment">//此处模拟业务异常情况</span>
-        <span class="token keyword">if</span><span class="token punctuation">(</span>num<span class="token operator">==</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
-            <span class="token keyword">int</span> a<span class="token operator">=</span><span class="token number">1</span><span class="token operator">/</span><span class="token number">0</span><span class="token punctuation">;</span>
-        <span class="token punctuation">&#125;</span>
-        <span class="token class-name">System</span><span class="token punctuation">.</span>out<span class="token punctuation">.</span><span class="token function">println</span><span class="token punctuation">(</span><span class="token string">"操作成功"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-
-        <span class="token comment">//2.4 释放锁</span>
-        <span class="token class-name">String</span> lockValue <span class="token operator">=</span> <span class="token punctuation">(</span><span class="token class-name">String</span><span class="token punctuation">)</span>redisTemplate<span class="token punctuation">.</span><span class="token function">opsForValue</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token string">"lock"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token keyword">if</span><span class="token punctuation">(</span>uuid<span class="token punctuation">.</span><span class="token function">equals</span><span class="token punctuation">(</span>lockValue<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">&#123;</span>
-            redisTemplate<span class="token punctuation">.</span><span class="token function">delete</span><span class="token punctuation">(</span><span class="token string">"lock"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token punctuation">&#125;</span>
-
-    <span class="token punctuation">&#125;</span><span class="token keyword">else</span> <span class="token punctuation">&#123;</span>
-        <span class="token keyword">try</span> <span class="token punctuation">&#123;</span>
-            <span class="token class-name">Thread</span><span class="token punctuation">.</span><span class="token function">sleep</span><span class="token punctuation">(</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token punctuation">&#125;</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">InterruptedException</span> e<span class="token punctuation">)</span> <span class="token punctuation">&#123;</span>
-            e<span class="token punctuation">.</span><span class="token function">printStackTrace</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token punctuation">&#125;</span>
-        <span class="token function">testLock</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token punctuation">&#125;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
                 
             </div>
             <hr/>
@@ -693,7 +589,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://localhost:4000/pages/c002/">http://localhost:4000/pages/c002/</a>
+                    <a href="http://localhost:4000/pages/c005/">http://localhost:4000/pages/c005/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -731,8 +627,8 @@
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/redis/">
-                                    <span class="chip bg-color">redis</span>
+                                <a href="/tags/interview/">
+                                    <span class="chip bg-color">interview</span>
                                 </a>
                             
                         </div>
@@ -906,17 +802,18 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
             <div class="card">
-                <a href="/pages/c003/">
+                <a href="/pages/c005/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/14.jpg" class="responsive-img" alt="hexo博客解决图片不显示问题">
+                        <img src="/medias/featureimages/5.jpg" class="responsive-img" alt="cas">
                         
-                        <span class="card-title">hexo博客解决图片不显示问题</span>
+                        <span class="card-title">cas</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -926,26 +823,27 @@
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2022-01-15
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-23
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/%E5%8D%9A%E5%AE%A2%E7%AF%87/" class="post-category">
-                                    博客篇
+                            <a href="/categories/%E9%9D%A2%E8%AF%95/" class="post-category">
+                                    面试
                                 </a>
                             
                             
                         </span>
                     </div>
                 </div>
+
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/blog/">
-                        <span class="chip bg-color">blog</span>
+                    <a href="/tags/interview/">
+                        <span class="chip bg-color">interview</span>
                     </a>
                     
                 </div>
@@ -959,13 +857,13 @@
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/pages/c001/">
+                <a href="/pages/c004/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/21.jpg" class="responsive-img" alt="搭建hexo+github博客">
+                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="单例模式的双重校验锁">
                         
-                        <span class="card-title">搭建hexo+github博客</span>
+                        <span class="card-title">单例模式的双重校验锁</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -976,14 +874,14 @@
                     </div>
                     <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-15
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-01-23
                             </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/%E5%8D%9A%E5%AE%A2%E7%AF%87/" class="post-category">
-                                    博客篇
+                            <a href="/categories/%E9%9D%A2%E8%AF%95/" class="post-category">
+                                    面试
                                 </a>
                             
                             
@@ -993,8 +891,8 @@
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/blog/">
-                        <span class="chip bg-color">blog</span>
+                    <a href="/tags/interview/">
+                        <span class="chip bg-color">interview</span>
                     </a>
                     
                 </div>
